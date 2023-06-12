@@ -68,7 +68,6 @@ const tmpFunction = async (id) =>{
 
     const friends = await getMyFriends(id);
 
-
     const privatePost = [];
 
     for (let a of friends) {
@@ -188,6 +187,8 @@ router.get('/getMyPost', authenticate, async (req, res) => {
     const post = await Post.find({ user: id });
 
     for (let x of post) {
+      const U = await User.findById({_id: x.user});
+      const userName = U.name;
       const { user, like, content, commentCount, isPrivate, comments, _id } = x;
       let imageLocation = uploadDirectory + x.image;
       const fileExtension = path.extname(imageLocation).substring(1);
@@ -201,6 +202,7 @@ router.get('/getMyPost', authenticate, async (req, res) => {
         // Convert the media file into a data URL
         const mediaDataUrl = `data:${mimeType};base64,${data.toString('base64')}`;
         const y = {
+          userName: userName,
           id: _id,
           image: mediaDataUrl,
           user,
@@ -234,6 +236,8 @@ router.get('/getDashboardPost', authenticate, async (req, res) => {
     const data =await tmpFunction(id);
     const required = data;
     for (let x of required) {
+      const U = await User.findById({_id: x.user});
+      const userName = U.name;
       const { user, like, content, commentCount, isPrivate, comments, _id } = x;
       let imageLocation = uploadDirectory + x.image;
       const fileExtension = path.extname(imageLocation).substring(1);
@@ -247,6 +251,7 @@ router.get('/getDashboardPost', authenticate, async (req, res) => {
         // Convert the media file into a data URL
         const mediaDataUrl = `data:${mimeType};base64,${data.toString('base64')}`;
         const y = {
+          userName: userName,
           id: _id,
           image: mediaDataUrl,
           user,
@@ -284,7 +289,9 @@ router.post('/trendingPost', authenticate, async(req,res)=>{
      const sortedData = data.sort(getKey);
      const required = sortedData;
      for (let x of required) {
-       const { user, like, content, commentCount, isPrivate, comments, _id } = x;
+      const U = await User.findById({_id: x.user});
+      const userName = U.name;
+      const { user, like, content, commentCount, isPrivate, comments, _id } = x;
        let imageLocation = uploadDirectory + x.image;
        const fileExtension = path.extname(imageLocation).substring(1);
        try {
@@ -297,6 +304,7 @@ router.post('/trendingPost', authenticate, async(req,res)=>{
          // Convert the media file into a data URL
          const mediaDataUrl = `data:${mimeType};base64,${data.toString('base64')}`;
          const y = {
+          userName: userName,
            id: _id,
            image: mediaDataUrl,
            user,
@@ -328,6 +336,8 @@ router.get('/postDataAdmin', authenticate, async (req,res) =>{
       const posts = await Post.find({});
       const postData = [];
       for (let x of posts) {
+        const U = await User.findById({_id: x.user});
+        const userName = U.name;
         const { user, like, content, commentCount, isPrivate, comments, _id } = x;
         let imageLocation = uploadDirectory + x.image;
         const fileExtension = path.extname(imageLocation).substring(1);
@@ -341,6 +351,7 @@ router.get('/postDataAdmin', authenticate, async (req,res) =>{
           // Convert the media file into a data URL
           const mediaDataUrl = `data:${mimeType};base64,${data.toString('base64')}`;
           const y = {
+            userName: userName,
             id: _id,
             image: mediaDataUrl,
             user,
