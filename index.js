@@ -6,8 +6,9 @@ const cors = require('cors');
 //System modules
 const connectToDb = require('./db');
 const auth = require('./routes/auth');
-const postOperation = require('./routes/post');
+const postOperation = require('./routes/postOperations');
 const admin = require('./routes/admin');
+const friends = require('./routes/friend');
 
 // Required function calls
 connectToDb();
@@ -25,6 +26,7 @@ app.use((req, res, next) => {
 app.use('/auth', auth);
 app.use('/postOperation', postOperation);
 app.use('/admin', admin);
+app.use('/friends',friends);
 
 
 

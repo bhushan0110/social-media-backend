@@ -7,6 +7,7 @@ const bcrypt = require('bcryptjs');
 
 //DB MODELS
 const User = require('../models/User');
+const Admin = require('../models/Admin');
 const authenticate = require('../middleware/authenticate');
 const sendMail = require('./email');
 
@@ -107,7 +108,7 @@ router.post('/login',
 
             // Sign a authtoken and send it to frontend
             const authToken = jwt.sign(data,JWT_SECRET);
-            res.status(200).json({authToken});
+            res.status(200).json({authToken,user});
 
         } 
         catch(err){
@@ -174,5 +175,24 @@ router.post('/forgotPassword',
         }
     }
 );
+
+router.get('/getUserDetails', authenticate, async(req,res)=>{
+    try{
+        const id = req.user.id;
+        const user = await User.findById({_id:id});
+        const admin = await Admin.findById({_id:id});
+
+        if(user){
+            res.status(200).send(user);
+        }
+        if(admin){
+            res.status(200).send(admin);
+        }
+    }
+    catch(err){ 
+        console.log(err);
+        res.status(500).send(err.message);
+    }
+});
 
 module.exports = router;

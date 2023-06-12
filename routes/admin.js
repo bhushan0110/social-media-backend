@@ -97,7 +97,7 @@ router.post('/login',
 
             // Sign a authtoken and send it to frontend
             const authToken = jwt.sign(data, JWT_SECRET);
-            res.status(200).json({ authToken });
+            res.status(200).json({ authToken,user });
 
         }
         catch (err) {
@@ -106,26 +106,11 @@ router.post('/login',
         }
     });
 
-router.post('/deletePost', authenticate, async (req, res) => {
+
+router.post('/changeUserState',authenticate,async (req, res) => {
     try {
-        const { postID } = req.body;
-
-        const del = await Post.findOneAndDelete({ _id: postID });
-        if (del) {
-            res.status(200).send(del.message);
-        }
-    }
-    catch (err) {
-        console.log(err);
-        res.status(500).send(err.message);
-    }
-});
-
-
-router.post('/disableUser', authenticate, async (req, res) => {
-    try {
-        const { userID } = req.body;
-        const changeStatus = await User.findOneAndUpdate({ _id: userID }, { status: false });
+        const { userID,status } = req.body;
+        const changeStatus = await User.findOneAndUpdate({ _id: userID }, { status: status });
         if (changeStatus) {
             res.status(200).send(changeStatus);
         }
@@ -136,21 +121,8 @@ router.post('/disableUser', authenticate, async (req, res) => {
     }
 });
 
-router.post('/enableUser', authenticate, async (req, res) => {
-    try {
-        const { userID } = req.body;
-        const changeStatus = await User.findOneAndUpdate({ _id: userID }, { status: true });
-        if (changeStatus) {
-            res.status(200).send(changeStatus);
-        }
-    }
-    catch (err) {
-        console.log(err);
-        res.status(500).send(err.message);
-    }
-});
 
-router.post('/deleteUser', authenticate, async (req, res) => {
+router.post('/deleteUser', authenticate,async (req, res) => {
     try {
         const { userID } = req.body;
         const deleted = await User.findOneAndDelete({ _id: userID });
@@ -163,6 +135,19 @@ router.post('/deleteUser', authenticate, async (req, res) => {
         res.status(500).send(err.message);
     }
 });
+
+router.get('/userData', authenticate, async(req,res) => {
+    try{
+        const user = await User.find({});
+        if(user){
+            res.status(200).send(user);
+        }
+    }
+    catch(err){
+        console.log(err.message);
+        res.status(500).send(err.message);
+    }
+})
 
 module.exports = router;
 

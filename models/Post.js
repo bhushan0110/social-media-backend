@@ -18,17 +18,21 @@ const PostSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    // image: {
-    //     type: Buffer,
-    //     contentType: String,
-    // },
+    image: {
+        type: String,
+        require: true
+    },
     isPrivate: {
         type: Boolean,
         default: false,
     },
     comments: {
-        type: [String],
+        type: [{}],
         default: [],
+    },
+    date: {
+        type: Date,
+        default: new Date
     }
 });
 
