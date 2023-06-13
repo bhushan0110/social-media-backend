@@ -148,11 +148,11 @@ router.post('/resetPassword', authenticate ,
 
 router.post('/forgotPassword',
     [
-        body('password').isLength({min:5})
+        body('email','Email is not Valid').isEmail()
     ],
     async(req,res)=>{
         try{
-            const email = req.body.email;
+            const {email} = req.body;
             const user = await User.findOne({email:email});
             if(!user){
                 return res.status(400).json({ error: 'Email not registered' });
