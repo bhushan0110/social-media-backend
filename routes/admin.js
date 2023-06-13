@@ -7,6 +7,7 @@ const bcrypt = require('bcryptjs');
 const Admin = require('../models/Admin');
 const User = require('../models/User');
 const authenticate = require('../middleware/authenticate');
+const Requests = require('../models/Requests');
 
 //NECESSARY CONSTANT AND FUNCTION
 const router = express.Router();
@@ -147,6 +148,39 @@ router.get('/userData', authenticate, async(req,res) => {
         res.status(500).send(err.message);
     }
 })
+
+router.get('/accountRequest', authenticate, async(req,res) =>{
+    try{
+        const requests = await Requests.find({});
+        if(requests){
+            res.status(200).send(requests);
+        }
+    }
+    catch(err){
+        console.log(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
+router.post('/activateAccount', authenticate, async(req,res)=>{
+    try{
+        const {id} = req.body;
+
+        const activate = await Requests.findOneAndDelete({user: id});
+        if(!activate){
+            res.status(500).send(activate);
+        }
+
+        const updateAcc = await User.findOneAndUpdate({_id: id},{status: true});
+        if(updateAcc){
+            res.status(200).send(updateAcc);
+        }
+    }
+    catch(err){
+        console.log(err.message);
+        res.status(500).send(err.message);
+    }
+});
 
 module.exports = router;
 
