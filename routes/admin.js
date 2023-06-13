@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
 //DB Models
-const Post = require('../models/Post');
 const Admin = require('../models/Admin');
 const User = require('../models/User');
 const authenticate = require('../middleware/authenticate');

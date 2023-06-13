@@ -25,7 +25,6 @@ const storage = multer.diskStorage({
     cb(null, 'uploads/');
   },
   filename: function (req, file, cb) {
-    console.log(file);
     const prefix = Date.now() + '-' + Math.round(Math.random() * 1E9)
     cb(null, prefix + '-' + file.originalname);
   }
@@ -167,7 +166,6 @@ router.post('/addPost', authenticate, upload.single('file'), async (req, res) =>
   try {
     const { content, isPrivate } = req.body;
     const id = req.user.id;
-    console.log(req.file.filename);
     const post = await Post.create({
       user: id,
       content: content,
@@ -194,7 +192,6 @@ router.post('/addComment', authenticate, async (req, res) => {
 
     const user = await User.findById({ _id: id });
     const userName = user.name;
-    console.log(userName);
     const add = await Post.updateOne({ _id: postID }, {
       $push: {
         comments: { $each: [{ userName, comment, id }] }
@@ -344,7 +341,6 @@ router.post('/likePost', authenticate, async(req,res)=>{
     }
     const response = await like.save();
     if(response){
-      console.log(response);
       res.status(200).send(response);
     }
   }

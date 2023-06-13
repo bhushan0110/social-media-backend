@@ -134,7 +134,6 @@ router.post('/resetPassword', authenticate ,
             const reset = await User.findOneAndUpdate({_id: req.user.id}, {password: encryptedPass});
 
             if(!reset){
-                console.log(reset);
                 return res.status(500).send(reset.message);
             }
 

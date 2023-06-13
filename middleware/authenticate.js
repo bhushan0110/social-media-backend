@@ -7,7 +7,6 @@ const authenticate = async (req,res,next) =>{
     if(!token){
         return res.status(401).send({error:'Access Denied'});
     }
-
     try{
         const data = await jwt.verify(token, JWT_SECRET);
         req.user = data.user;
