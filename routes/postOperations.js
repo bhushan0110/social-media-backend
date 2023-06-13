@@ -13,6 +13,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 const fs = require('fs');
 const path = require('path');
+const Likes = require('../models/Likes');
 const uploadDirectory = './uploads/';
 if (!fs.existsSync(uploadDirectory)) {
   fs.mkdirSync(uploadDirectory);
@@ -62,7 +63,7 @@ const getMyFriends = async (id) => {
 
 //get post to be displayed to user
 
-const tmpFunction = async (id) =>{
+const get_post_displayed_user = async (id) =>{
   try{
     const data = await Post.find({ isPrivate: false });
 
@@ -92,6 +93,59 @@ const tmpFunction = async (id) =>{
   }
   catch(err){
     console.log(err.message);
+  }
+}
+
+const ImageFetch_localStorage = async (post,id) =>{
+  try{
+    const postData = [];
+    for (let x of post) {
+      const U = await User.findById({_id: x.user});
+      const userName = U.name;
+
+      const { user, like, content, commentCount, isPrivate, comments, _id } = x;
+
+      const checkLiked = await Likes.find({post: _id, likedBy: id});
+      let isLiked = false;
+      if(checkLiked.length > 0){
+        isLiked = true;
+      }
+
+      let imageLocation = uploadDirectory + x.image;
+      const fileExtension = path.extname(imageLocation).substring(1);
+      try {
+
+        const data = await readFileAsync(imageLocation);
+
+        // Determine the MIME type based on the file extension
+        const mimeType = `image/${fileExtension === 'mp4' ? 'mp4' : 'jpeg'}`;
+
+        // Convert the media file into a data URL
+        const mediaDataUrl = `data:${mimeType};base64,${data.toString('base64')}`;
+        const y = {
+          userName: userName,
+          id: _id,
+          image: mediaDataUrl,
+          user,
+          like,
+          content,
+          commentCount, isPrivate,
+          comments,
+          isLiked: isLiked
+        };
+
+        postData.push(y);
+
+      }
+      catch (err) {
+        console.log(err);
+        res.status(500).send(err.message);
+      }
+    }
+    return postData;
+  }
+  catch(err){
+    console.log(err);
   }
 }
 
@@ -182,45 +236,16 @@ router.post('/deleteComment', authenticate, async (req, res) => {
 
 router.get('/getMyPost', authenticate, async (req, res) => {
   try {
-    const postData = [];
+    
     const id = req.user.id;
     const post = await Post.find({ user: id });
 
-    for (let x of post) {
-      const U = await User.findById({_id: x.user});
-      const userName = U.name;
-      const { user, like, content, commentCount, isPrivate, comments, _id } = x;
-      let imageLocation = uploadDirectory + x.image;
-      const fileExtension = path.extname(imageLocation).substring(1);
-      try {
-
-        const data = await readFileAsync(imageLocation);
-
-        // Determine the MIME type based on the file extension
-        const mimeType = `image/${fileExtension === 'mp4' ? 'mp4' : 'jpeg'}`;
-
-        // Convert the media file into a data URL
-        const mediaDataUrl = `data:${mimeType};base64,${data.toString('base64')}`;
-        const y = {
-          userName: userName,
-          id: _id,
-          image: mediaDataUrl,
-          user,
-          like,
-          content,
-          commentCount, isPrivate,
-          comments
-        };
-
-        postData.push(y);
-
-      }
-      catch (err) {
-        console.log(err);
-        res.status(500).send(err.message);
-      }
+    const postData = await ImageFetch_localStorage(post,id);
+    
+    
+    if(postData){
+      res.status(200).send(postData);
     }
-    res.status(200).send(postData);
   }
   catch (err) {
     console.log(err);
@@ -230,45 +255,13 @@ router.get('/getMyPost', authenticate, async (req, res) => {
 
 router.get('/getDashboardPost', authenticate, async (req, res) => {
   try {
+
     const id = req.user.id;
-    const postData = [];
-
-    const data =await tmpFunction(id);
+   
+    const data =await get_post_displayed_user(id);
     const required = data;
-    for (let x of required) {
-      const U = await User.findById({_id: x.user});
-      const userName = U.name;
-      const { user, like, content, commentCount, isPrivate, comments, _id } = x;
-      let imageLocation = uploadDirectory + x.image;
-      const fileExtension = path.extname(imageLocation).substring(1);
-      try {
+    const postData =await ImageFetch_localStorage(required,id);
 
-        const data = await readFileAsync(imageLocation);
-
-        // Determine the MIME type based on the file extension
-        const mimeType = `image/${fileExtension === 'mp4' ? 'mp4' : 'jpeg'}`;
-
-        // Convert the media file into a data URL
-        const mediaDataUrl = `data:${mimeType};base64,${data.toString('base64')}`;
-        const y = {
-          userName: userName,
-          id: _id,
-          image: mediaDataUrl,
-          user,
-          like,
-          content,
-          commentCount, isPrivate,
-          comments
-        };
-
-        postData.push(y);
- 
-      }
-      catch (err) {
-        console.log(err);
-        res.status(500).send(err.message);
-      }
-    }
     res.status(200).send(postData);
   }
   catch (err) {
@@ -283,45 +276,15 @@ const getKey = (a,b) =>{
 
 router.post('/trendingPost', authenticate, async(req,res)=>{
   try{
-     const id = req.body.id;
+     const id = req.user.id;
 
-     const data =await tmpFunction(id);
+     const data =await get_post_displayed_user(id);
      const sortedData = data.sort(getKey);
      const required = sortedData;
-     for (let x of required) {
-      const U = await User.findById({_id: x.user});
-      const userName = U.name;
-      const { user, like, content, commentCount, isPrivate, comments, _id } = x;
-       let imageLocation = uploadDirectory + x.image;
-       const fileExtension = path.extname(imageLocation).substring(1);
-       try {
- 
-         const data = await readFileAsync(imageLocation);
- 
-         // Determine the MIME type based on the file extension
-         const mimeType = `image/${fileExtension === 'mp4' ? 'mp4' : 'jpeg'}`;
- 
-         // Convert the media file into a data URL
-         const mediaDataUrl = `data:${mimeType};base64,${data.toString('base64')}`;
-         const y = {
-          userName: userName,
-           id: _id,
-           image: mediaDataUrl,
-           user,
-           like,
-           content,
-           commentCount, isPrivate,
-           comments
-         };
- 
-         postData.push(y);
-  
-       }
-       catch (err) {
-         console.log(err);
-         res.status(500).send(err.message);
-       }
-     }
+
+
+     const postData = await ImageFetch_localStorage(required,id);
+
      res.status(200).send(postData);
   }
   catch(err){
@@ -333,43 +296,9 @@ router.post('/trendingPost', authenticate, async(req,res)=>{
 
 router.get('/postDataAdmin', authenticate, async (req,res) =>{
   try{
+      const id = req.user.id;
       const posts = await Post.find({});
-      const postData = [];
-      for (let x of posts) {
-        const U = await User.findById({_id: x.user});
-        const userName = U.name;
-        const { user, like, content, commentCount, isPrivate, comments, _id } = x;
-        let imageLocation = uploadDirectory + x.image;
-        const fileExtension = path.extname(imageLocation).substring(1);
-        try {
-  
-          const data = await readFileAsync(imageLocation);
-  
-          // Determine the MIME type based on the file extension
-          const mimeType = `image/${fileExtension === 'mp4' ? 'mp4' : 'jpeg'}`;
-  
-          // Convert the media file into a data URL
-          const mediaDataUrl = `data:${mimeType};base64,${data.toString('base64')}`;
-          const y = {
-            userName: userName,
-            id: _id,
-            image: mediaDataUrl,
-            user,
-            like,
-            content,
-            commentCount, isPrivate,
-            comments
-          };
-  
-          postData.push(y);
-   
-        }
-        catch (err) {
-          console.log(err);
-          res.status(500).send(err.message);
-        }
-      }
-
+      const postData =await ImageFetch_localStorage(posts,id);
       res.status(200).send(postData);
   }
   catch(err){
@@ -399,5 +328,52 @@ router.post('/deletePost', authenticate, async (req, res) => {
       res.status(500).send(err.message);
   }
 }); 
+
+router.post('/likePost', authenticate, async(req,res)=>{
+  try{
+    const id = req.user.id;
+    const {postID, likeCount} = req.body;
+    const like = await Likes.create({
+      post: postID,
+      likedBy: id
+    });
+
+    const post = await Post.findOneAndUpdate({_id:postID},{like: (likeCount+1)});
+    if(!post){
+      res.status(500).send(post.message);
+    }
+    const response = await like.save();
+    if(response){
+      console.log(response);
+      res.status(200).send(response);
+    }
+  }
+  catch(err){
+    console.log(err.message);
+    res.status(500).send(err.message);
+  }
+});
+
+router.post('/unlikePost', authenticate, async(req,res)=>{
+  try{
+    const id = req.user.id;
+    const {postID, likeCount} = req.body;
+    const response = await Likes.findOneAndDelete({likedBy:id, post: postID});
+
+    const post = await Post.findOneAndUpdate({_id:postID},{like: (likeCount-1)});
+    if(!post){
+      res.status(500).send(post.message);
+    }
+
+    if(response){
+      res.status(200).send(response);
+    }
+  }
+  catch(err){
+    console.log(err.message);
+    res.status(500).send(err.message);
+  }
+});
+
 
 module.exports = router;
