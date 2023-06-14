@@ -194,4 +194,21 @@ router.get('/getUserDetails', authenticate, async(req,res)=>{
     }
 });
 
+router.post('/editProfile', authenticate, async(req,res) =>{
+    try {
+        const id = req.user.id;
+
+        const {email,name,dob} = req.body;
+
+        const response = await User.findOneAndUpdate({_id:id}, {email,name,dob});
+        if(response){
+            res.status(200).send(response);
+        }
+
+    } catch (error) {   
+        console.log(error);
+        res.status(500).send(error.message);
+    }
+});
+
 module.exports = router;

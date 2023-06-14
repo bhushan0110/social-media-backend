@@ -139,15 +139,53 @@ router.post('/deleteUser', authenticate,async (req, res) => {
 router.get('/userData', authenticate, async(req,res) => {
     try{
         const user = await User.find({});
-        if(user){
-            res.status(200).send(user);
+        const request = await Requests.find({});
+
+        const data = [];
+
+        for(let x of user){
+            let flg=1;
+            for(y of request){
+                if(x.email === y.email){
+                    flg=0;
+                    break;
+                }
+
+            }
+            if(flg===1){
+                data.push(x);
+            }
+        }
+
+        if(data){
+            res.status(200).send(data);
         }
     }
     catch(err){
         console.log(err.message);
         res.status(500).send(err.message);
     }
-})
+});
+
+router.post('/createAccRequest', async(req,res) =>{
+    try{
+        const {id,name,email} = req.body;
+        const data = await Requests.create({
+            user: id,
+            name,
+            email
+        });
+
+        const response = await data.save();
+        if(response){
+            res.status(200).send(response);
+        }
+    }
+    catch(err){
+        console.log(err.message);
+        res.status(500).send(err.message);
+    }
+});
 
 router.get('/accountRequest', authenticate, async(req,res) =>{
     try{

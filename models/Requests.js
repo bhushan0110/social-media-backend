@@ -5,8 +5,16 @@ const RequestsSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         require: true
+    },
+    name: {
+        type: String,
+        require: true,
+    },
+    email: {
+        type: String,
+        require: true,
     }
 });
 
-const Requests = mongoose.model('Reguests',RequestsSchema);
+const Requests = mongoose.model('Requests',RequestsSchema);
 module.exports = Requests;
