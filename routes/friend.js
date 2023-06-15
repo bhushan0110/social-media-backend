@@ -4,6 +4,7 @@ const express = require('express');
 const User = require('../models/User');
 const Friend = require('../models/Friends');
 const authenticate = require('../middleware/authenticate');
+const FriendRequest = require('../models/FriendRequests');
 
 //
 const router = express.Router();
@@ -14,7 +15,6 @@ const getMyFriends = async (id) =>{
         const y = await Friend.find({user2: id});
 
         const friendList = [];
-
         for( let item of x){
             const tmp = await User.findById({_id:item.user2});
             if(tmp && tmp.status === true)
@@ -92,12 +92,12 @@ router.post('/addFriend', authenticate, async(req,res)=>{
     try{
         const id = req.user.id;
         const { friendID } = req.body;
-        const user = await Friend.create({
-            user1: id,
-            user2: friendID,
+        const request = await FriendRequest.create({
+            requestBy: id,
+            to: friendID,
         });
 
-        const success = await user.save();
+        const success = await request.save();
         if(success){
             res.status(200).send(success);
         }
@@ -124,5 +124,49 @@ router.post('/removeFriend', authenticate, async(req,res) =>{
 });
 
 
+router.post('/acceptRequest', authenticate, async(req,res)=>{
+    try{
+        const id = req.user.id;
+        const {friendID} = req.body;
+
+        const y = await Friend.create({
+            user1: id,
+            user2: friendID
+        });
+
+        const success = await y.save();
+
+        const delReq = await FriendRequest.findOneAndDelete({to:id, requestBy: friendID});
+        if(delReq){
+            res.status(200).send(success);
+        }
+    }
+    catch(err){
+        console.log(err.message);
+        res.status(500).send(err.message);
+    }
+});
+
+router.get('/friendRequests', authenticate, async (req,res) =>{
+    try{
+        const id = req.user.id;
+        const requests = await FriendRequest.find({to: id});
+        const data = [];
+
+        for(let x of requests){
+            const friendID = x.requestBy;
+            const user = await User.findById({_id: friendID});
+            data.push(user);
+        }
+
+        if(data){
+            res.status(200).send(data);
+        }
+    }
+    catch(err){
+        console.log(err);
+        res.status(500).send(err.message);
+    }
+});
 
 module.exports = router;
