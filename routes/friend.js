@@ -17,13 +17,13 @@ const getMyFriends = async (id) =>{
 
         for( let item of x){
             const tmp = await User.findById({_id:item.user2});
-            if(tmp)
+            if(tmp && tmp.status === true)
                 friendList.push(tmp);
         }
 
         for(let item of y){
             const tmp = await User.findById({_id: item.user1});
-            if(tmp)
+            if(tmp && tmp.status === true)
                 friendList.push(tmp);
         }
 
@@ -55,7 +55,7 @@ router.post('/searchFriend', authenticate, async(req,res)=>{
         const id = req.user.id;
         const { userName } = req.body;
 
-        const data = await User.find({ name: { $regex: new RegExp(userName, 'i') } });
+        const data = await User.find({ name: { $regex: new RegExp(userName, 'i') }, status: true });
 
         const friendList =await getMyFriends(id);
 

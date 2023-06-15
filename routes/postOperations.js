@@ -9,7 +9,6 @@ const Friend = require('../models/Friends');
 
 //NECESSARY CONSTANT AND FUNCTION
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET;
 
 const fs = require('fs');
 const path = require('path');
@@ -43,13 +42,13 @@ const getMyFriends = async (id) => {
 
     for (let item of x) {
       const tmp = await User.findById({ _id: item.user2 });
-      if (tmp)
+      if (tmp && tmp.status===true)
         friendList.push(tmp);
     }
 
     for (let item of y) {
       const tmp = await User.findById({ _id: item.user1 });
-      if (tmp)
+      if (tmp && tmp.status===true)
         friendList.push(tmp);
     }
 
@@ -64,7 +63,17 @@ const getMyFriends = async (id) => {
 
 const get_post_displayed_user = async (id) =>{
   try{
-    const data = await Post.find({ isPrivate: false });
+    const data = [];
+
+    const users = await User.find({status: true});
+
+    for(let x of users){
+      const id = x._id;
+      const post = await Post.find({user: id});
+      for( y of post){
+        data.push(y);
+      }
+    }
 
     const friends = await getMyFriends(id);
 
