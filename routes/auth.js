@@ -87,28 +87,34 @@ router.post('/login',
         try{
             //Check user exist
             const user = await User.findOne({email:email});
-            if(!user){
+            const admin = await Admin.findOne({email: email});
+            if(!user && !admin){
                 return res.status(401).send("Invalid Credentials");
             }
-            if(user.status===false){
-                return res.status(401).send('Unauthorized User Contact admin');
+
+            let isAdmin = false;
+            let require = user;
+            if(!user){  
+                isAdmin = true;
+                require = admin;
             }
 
             //Compare input password with encrypted password
-            const compare_password = await bcrypt.compare(password,user.password);
+
+            const compare_password = await bcrypt.compare(password,require.password);
             if(!compare_password){
                 return res.status(401).send("Invalid Credentials");
             }
 
             const data = {
                 user: {
-                    id: user.id
+                    id: require.id
                 }
             };
 
             // Sign a authtoken and send it to frontend
             const authToken = jwt.sign(data,JWT_SECRET);
-            res.status(200).json({authToken,user});
+            res.status(200).json({authToken,require, isAdmin});
 
         } 
         catch(err){

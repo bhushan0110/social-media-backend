@@ -64,49 +64,6 @@ router.post('/signup',
     });
 
 
-router.post('/login',
-    [
-        body('email').isEmail(),
-    ]
-    , async (req, res) => {
-        // Check inputs are valid 
-        const error = validationResult(req);
-        if (!error.isEmpty()) {
-            return res.status(400).send({ error });
-        }
-
-        const { email, password } = req.body;
-        try {
-            //Check user exist
-            const user = await Admin.findOne({ email: email });
-            if (!user) {
-                return res.status(401).send("Invalid Credentials");
-            }
-
-            //Compare input password with encrypted password
-            const compare_password = await bcrypt.compare(password, user.password);
-            if (!compare_password) {
-                return res.status(401).send("Invalid Credentials");
-            }
-
-            const data = {
-                user: {
-                    id: user.id
-                }
-            };
-
-            // Sign a authtoken and send it to frontend
-            const authToken = jwt.sign(data, JWT_SECRET);
-            res.status(200).json({ authToken,user });
-
-        }
-        catch (err) {
-            console.log(err.message);
-            res.status(500).send(err.message);
-        }
-    });
-
-
 router.post('/changeUserState',authenticate,async (req, res) => {
     try {
         const { userID,status } = req.body;
